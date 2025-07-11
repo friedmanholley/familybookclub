@@ -22,7 +22,7 @@
       text-align: center;
       color: #333;
     }
-    .book {
+    .book, .confirmation, .summary-section {
       margin-bottom: 20px;
     }
     label {
@@ -38,9 +38,6 @@
       margin: 30px auto;
       padding: 10px 20px;
       font-size: 16px;
-    }
-    .results, .tally {
-      margin-top: 30px;
     }
     .vote-entry {
       margin-bottom: 10px;
@@ -58,67 +55,59 @@
       <input type="text" id="voterName" placeholder="Your name" required style="width: 100%; padding: 8px; margin-top: 10px;" />
       <button type="submit">Submit Rankings</button>
     </form>
-
-    <div class="results" id="results"></div>
-    <div class="tally" id="tally">
-      <h2>Current Ranking (Ranked Choice Tally)</h2>
-      <div id="voteTally"></div>
-      <h3>Voters So Far</h3>
-      <div id="voterList"></div>
-    </div>
   </div>
 
   <script>
-      const books = [
+    const books = [
       {
         title: "The Outlaw Ocean",
         author: "Ian Urbina",
-        summary: "This gripping work of investigative journalism explores the lawless frontier of the world's oceans. Urbina uncovers stories of pirates, human trafficking, rogue fishers, and vigilantes operating beyond any nation’s jurisdiction. Based on five years of reporting, the book dives deep into the chaos and violence often hidden beneath the surface. It’s a powerful expose of how our economies rely on these shadowy practices at sea."
+        summary: "Investigative journalist Ian Urbina reveals the lawless frontier of the high seas. The book explores human trafficking, illegal fishing, piracy, and environmental crimes through riveting real-life accounts."
       },
       {
         title: "The Simple Art of Killing a Woman",
         author: "Patrícia Melo",
-        summary: "In this genre-bending novel, a young lawyer flees an abusive relationship and finds herself in the Amazon. There, she becomes immersed in the epidemic of violence against women in Brazil. Through mystical visions and ancestral voices, she unearths personal and collective trauma. The book blends poetic prose, social commentary, and magical realism in a haunting narrative."
+        summary: "A lawyer escapes an abusive partner and discovers rampant femicide in the Amazon. Her journey blends activism, personal healing, and mystical visions of ancestral warrior women."
       },
       {
         title: "The Storyteller’s Secret",
         author: "Sejal Badani",
-        summary: "Jaya, a journalist grieving her third miscarriage, travels to India in search of her family's past. There she learns the powerful story of her grandmother, a storyteller whose courage helped shape generations. The journey brings healing, cultural connection, and unexpected revelations. It's a poignant exploration of loss, resilience, and the ties that bind women across time."
+        summary: "Grieving her third miscarriage, Jaya travels to India where she uncovers her grandmother’s legacy as a courageous storyteller. The journey bridges generations of women through resilience and healing."
       },
       {
         title: "Someone Knows My Name",
         author: "Lawrence Hill",
-        summary: "Aminata Diallo is abducted from West Africa and enslaved in the American South. Her intelligence and determination lead her through the horrors of slavery, war, and separation from her family. She eventually helps write the historical 'Book of Negroes' and joins the abolitionist cause. This epic novel follows her extraordinary life from bondage to freedom and advocacy."
+        summary: "Aminata Diallo is abducted into slavery but fights for freedom and justice. Her journey from South Carolina to Nova Scotia to Sierra Leone paints a powerful portrait of survival and resistance."
       },
       {
         title: "The Kingmaker’s Daughter",
         author: "Philippa Gregory",
-        summary: "Anne Neville, daughter of the powerful Earl of Warwick, is used as a pawn in her father's ambition to control the throne of England. As political tides turn, she navigates a dangerous world of betrayal, marriage, and power. Married young to a royal rival, she must rely on her wits to survive. Gregory paints a vivid picture of ambition and female agency in the Wars of the Roses."
+        summary: "Anne Neville, daughter of a powerful English noble, is used as a political pawn. The novel depicts her rise and struggles amid the deadly ambitions of the Wars of the Roses."
       },
       {
         title: "The Song of Achilles",
         author: "Madeline Miller",
-        summary: "This lyrical retelling of the Iliad focuses on the bond between Patroclus and Achilles. As boys, they grow from reluctant companions to inseparable lovers. Their love is tested by war, pride, and fate during the siege of Troy. It's a moving and tragic story of devotion in the shadow of mythology."
+        summary: "This mythic love story follows Achilles and Patroclus from boyhood to war. Their relationship is tested by fate and pride as the Trojan War looms over their bond."
       },
       {
         title: "Raising Hare",
         author: "Chloe Dalton",
-        summary: "In this quiet, contemplative novel, a woman finds purpose and unexpected companionship raising a wild hare. Through the animal’s growth and eventual independence, she reconnects with her own sense of healing and solitude. The narrative is minimal and reflective, inviting readers into a close communion with nature. It’s a meditative tale of love, loss, and letting go."
+        summary: "A woman raises a wild hare, finding unexpected meaning and peace. It’s a quiet meditation on connection, healing, and letting go, steeped in the rhythms of nature."
       },
       {
         title: "The Griffin Sisters’ Greatest Hits",
         author: "Jennifer Weiner",
-        summary: "Pop duo Cassie and Zoe Griffin rose to fame in the early 2000s—then crashed spectacularly. Two decades later, their estranged lives are shaken up when Zoe’s daughter seeks to reunite them and uncover the real reason they broke up. With wit and emotion, the novel explores sisterhood, fame, and second chances. It’s a layered story about family secrets and healing."
+        summary: "Pop stars Cassie and Zoe fell apart at their peak. Years later, a new generation tries to bring them back together—and unravel the secrets of their meteoric rise and fall."
       },
       {
         title: "Murder Takes a Vacation",
         author: "Laura Lippman",
-        summary: "A woman falls for a charming stranger on a cruise, only for him to turn up dead. As the investigation unfolds, she’s forced to unravel the truth about who he really was—and why he died. With classic suspense and twists, the book blends romance and murder mystery. It’s a breezy, engaging thriller perfect for vacation reading."
+        summary: "A cruise romance turns dark when the man winds up dead. The woman must confront mystery and danger to uncover what really happened at sea."
       },
       {
         title: "Atmosphere",
         author: "Taylor Jenkins Reid",
-        summary: "Joan Goodwin, a physics professor, is selected for NASA’s Space Shuttle program in 1980. Training alongside other pioneers, she discovers deep friendships, a transformative love, and her passion for spaceflight. But a tragic mission in 1984 forces her to confront loss and the limits of her dreams. It’s a story of ambition, identity, and what it means to find your place in the universe."
+        summary: "Joan Goodwin joins NASA’s Space Shuttle program in the 1980s. As her mission nears, she grapples with ambition, love, loss, and her place in the universe."
       }
     ];
 
@@ -141,17 +130,12 @@
       bookList.appendChild(div);
     });
 
-    async function loadVotesFromSheet() {
-      const res = await fetch("https://script.google.com/macros/s/AKfycbwE7JmRYZX6Cg83yaW5Y_4hjEvHTkiSHQIUELAJ9i3WvVio0kqDXJKu1a9jkEcDkEIG/exec");
-      const data = await res.json();
-      updateResults(data);
-    }
-
     document.getElementById("rankingForm").addEventListener("submit", async function(e) {
       e.preventDefault();
       const formData = new FormData(e.target);
       const selected = {};
       const seenRanks = new Set();
+
       for (let [key, value] of formData.entries()) {
         if (value) {
           const title = document.getElementById(key).dataset.title;
@@ -180,40 +164,8 @@
         body: JSON.stringify(payload)
       });
 
-      e.target.reset();
-      loadVotesFromSheet();
+      window.location.href = "results.html";
     });
-
-    function updateResults(votes) {
-      if (!votes.length) return;
-
-      const latest = votes[votes.length - 1];
-      const resultsDiv = document.getElementById("results");
-      resultsDiv.innerHTML = "<h3>Your Rankings:</h3><ol>" +
-        [1,2,3,4,5].map(num => latest.rankings[num] ? `<li>${latest.rankings[num]}</li>` : "<li>–</li>").join("") +
-        "</ol>";
-
-      const tally = {};
-      votes.forEach(vote => {
-        for (let i = 1; i <= 5; i++) {
-          const title = vote.rankings[i];
-          if (title) {
-            tally[title] = (tally[title] || 0) + (6 - i);
-          }
-        }
-      });
-
-      const sorted = Object.entries(tally).sort((a, b) => b[1] - a[1]);
-      const voteTally = document.getElementById("voteTally");
-      voteTally.innerHTML = `<ol>${sorted.map(([title, pts]) => `<li>${title} — ${pts} pts</li>`).join("")}</ol>`;
-
-      const voterList = document.getElementById("voterList");
-      voterList.innerHTML = votes.map(v => `<div class="vote-entry"><strong>${v.name}</strong>: ` +
-        Object.entries(v.rankings).sort(([a], [b]) => a - b).map(([rank, book]) => `${rank}: ${book}`).join(", ") +
-        `</div>`).join("");
-    }
-
-    window.onload = loadVotesFromSheet;
   </script>
 </body>
 </html>
