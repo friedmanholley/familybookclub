@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Book Club Results</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1, h2 {
+      text-align: center;
+      color: #333;
+    }
+    .vote-entry {
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .section {
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Book Club Voting Results</h1>
+    <div class="section">
+      <h2>Top 5 Books</h2>
+      <div id="voteTally"></div>
+    </div>
+    <div class="section">
+      <h2>Voters So Far</h2>
+      <div id="voterList"></div>
+    </div>
+  </div>
+
+  <script>
+    async function loadVotes() {
+      const res = await fetch("https://script.google.com/macros/s/AKfycbwE7JmRYZX6Cg83yaW5Y_4hjEvHTkiSHQIUELAJ9i3WvVio0kqDXJKu1a9jkEcDkEIG/exec");
+      const data = await res.json();
+      displayResults(data);
+    }
+
+    function displayResults(votes) {
+      const tally = {};
+      votes.forEach(vote => {
+        for (let i = 1; i <= 5; i++) {
+          const title = vote.rankings[i];
+          if (title) {
+            tally[title] = (tally[title] || 0) + (6 - i);
+          }
+        }
+      });
+
+      const sorted = Object.entries(tally).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      const voteTally = document.getElementById("voteTally");
+      voteTally.innerHTML = `<ol>${sorted.map(([title, pts]) => `<li>${title} — ${pts} pts</li>`).join("")}</ol>`;
+
+      const voterList = document.getElementById("voterList");
+      voterList.innerHTML = votes.map(v => `<div class="vote-entry"><strong>${v.name}</strong>: ` +
+        Object.entries(v.rankings).sort(([a], [b]) => a - b).map(([rank, book]) => `${rank}: ${book}`).join(", ") +
+        `</div>`).join("");
+    }
+
+    window.onload = loadVotes;
+  </script>
+</body>
+</html>
