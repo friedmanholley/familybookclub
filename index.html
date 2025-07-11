@@ -52,7 +52,7 @@
     <h1>Rank Your Top 5 Book Club Picks</h1>
     <form id="rankingForm">
       <div id="bookList"></div>
-      <input type="text" id="voterName" placeholder="Your name" required style="width: 100%; padding: 8px; margin-top: 10px;" />
+      <input type="text" id="voterName" name="voterName" placeholder="Your name" required style="width: 100%; padding: 8px; margin-top: 10px;" />
       <button type="submit">Submit Rankings</button>
     </form>
   </div>
@@ -137,7 +137,7 @@
       const seenRanks = new Set();
 
       for (let [key, value] of formData.entries()) {
-        if (value) {
+        if (value && key.startsWith("rank")) {
           const title = document.getElementById(key).dataset.title;
           if (seenRanks.has(value)) {
             alert("Each rank must be unique. Please fix duplicates.");
@@ -159,12 +159,18 @@
         rankings: selected
       };
 
-      await fetch("https://script.google.com/macros/s/AKfycbwE7JmRYZX6Cg83yaW5Y_4hjEvHTkiSHQIUELAJ9i3WvVio0kqDXJKu1a9jkEcDkEIG/exec", {
-        method: "POST",
-        body: JSON.stringify(payload)
-      });
-
-      window.location.href = "results.html";
+      try {
+        const res = await fetch("https://script.google.com/macros/s/AKfycbwE7JmRYZX6Cg83yaW5Y_4hjEvHTkiSHQIUELAJ9i3WvVio0kqDXJKu1a9jkEcDkEIG/exec", {
+          method: "POST",
+          mode: "no-cors",
+          body: JSON.stringify(payload)
+        });
+        // no-cors mode won’t let us check status, but redirect anyway
+        window.location.href = "results.html";
+      } catch (err) {
+        console.error("Submission error:", err);
+        alert("There was an error submitting your vote. Please try again later.");
+      }
     });
   </script>
 </body>
