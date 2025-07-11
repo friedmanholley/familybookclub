@@ -162,15 +162,22 @@
       try {
         const res = await fetch("https://script.google.com/macros/s/AKfycbwE7JmRYZX6Cg83yaW5Y_4hjEvHTkiSHQIUELAJ9i3WvVio0kqDXJKu1a9jkEcDkEIG/exec", {
           method: "POST",
-          mode: "no-cors",
+          headers: {
+            "Content-Type": "application/json"
+          },
           body: JSON.stringify(payload)
         });
-        // no-cors mode won’t let us check status, but redirect anyway
+      
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+      
         window.location.href = "results.html";
       } catch (err) {
         console.error("Submission error:", err);
         alert("There was an error submitting your vote. Please try again later.");
       }
+
     });
   </script>
 </body>
