@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Book Club Ranking Survey</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1, h2, h3 {
+      text-align: center;
+      color: #333;
+    }
+    .book {
+      margin-bottom: 20px;
+    }
+    label {
+      font-weight: bold;
+    }
+    select {
+      margin-top: 5px;
+      width: 100%;
+      padding: 5px;
+    }
+    button {
+      display: block;
+      margin: 30px auto;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+    .results, .tally {
+      margin-top: 30px;
+    }
+    .vote-entry {
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📚 Rank Your Top 5 Book Club Picks</h1>
+    <form id="rankingForm">
+      <div id="bookList"></div>
+      <input type="text" id="voterName" placeholder="Your name" required style="width: 100%; padding: 8px; margin-top: 10px;" />
+      <button type="submit">Submit Rankings</button>
+    </form>
+
+    <div class="results" id="results"></div>
+    <div class="tally" id="tally">
+      <h2>📊 Current Ranking (Ranked Choice Tally)</h2>
+      <div id="voteTally"></div>
+      <h3>Voters So Far</h3>
+      <div id="voterList"></div>
+    </div>
+  </div>
+
+  <script>
+    const books = [
+      { title: "The Outlaw Ocean", author: "Ian Urbina", summary: "Investigative reporting on lawless waters full of crime, survival, and exploitation." },
+      { title: "The Simple Art of Killing a Woman", author: "Patrícia Melo", summary: "A hybrid novel-poem confronting femicide and trauma in the Amazon." },
+      { title: "The Storyteller’s Secret", author: "Badani", summary: "A woman travels to India after miscarriage and marital heartbreak, uncovering family history." },
+      { title: "Someone Knows My Name", author: "Lawrence Hill", summary: "A saga of enslavement, survival, and abolition from America to Sierra Leone." },
+      { title: "The Kingmaker’s Daughter", author: "Philippa Gregory", summary: "Two noble daughters navigate deadly politics in the English court." },
+      { title: "The Song of Achilles", author: "Madeline Miller", summary: "A romantic, tragic reimagining of Achilles and Patroclus at the Trojan War." },
+      { title: "Raising Hare", author: "Chloe Dalton", summary: "A quiet story of a woman raising a wild hare." },
+      { title: "The Griffin Sisters’ Greatest Hits", author: "Jennifer Weiner", summary: "A former pop duo’s rise, fall, and reunion through a daughter's eyes." },
+      { title: "Murder Takes a Vacation", author: "Laura Lippman", summary: "Romance and mystery unfold on a cruise when the love interest turns up dead." },
+      { title: "Atmosphere", author: "Taylor Jenkins Reid", summary: "A woman joins NASA’s shuttle program, finding love, loss, and her place in the universe." }
+    ];
+
+    const bookList = document.getElementById("bookList");
+    books.forEach((book, index) => {
+      const div = document.createElement("div");
+      div.classList.add("book");
+      div.innerHTML = `
+        <label for="rank${index}">${book.title} by ${book.author}</label>
+        <p>${book.summary}</p>
+        <select name="rank${index}" id="rank${index}" data-title="${book.title}">
+          <option value="">–</option>
+          <option value="1">1st</option>
+          <option value="2">2nd</option>
+          <option value="3">3rd</option>
+          <option value="4">4th</option>
+          <option value="5">5th</option>
+        </select>
+      `;
+      bookList.appendChild(div);
+    });
+
+    async function loadVotesFromSheet() {
+      const res = await fetch("https://script.google.com/macros/s/AKfycbwE7JmRYZX6Cg83yaW5Y_4hjEvHTkiSHQIUELAJ9i3WvVio0kqDXJKu1a9jkEcDkEIG/exec");
+      const data = await res.json();
+      updateResults(data);
+    }
+
+    document.getElementById("rankingForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const selected = {};
+      const seenRanks = new Set();
+      for (let [key, value] of formData.entries()) {
+        if (value) {
+          const title = document.getElementById(key).dataset.title;
+          if (seenRanks.has(value)) {
+            alert("Each rank must be unique. Please fix duplicates.");
+            return;
+          }
+          seenRanks.add(value);
+          selected[value] = title;
+        }
+      }
+
+      const voterName = document.getElementById("voterName").value.trim();
+      if (!voterName) {
+        alert("Please enter your name.");
+        return;
+      }
+
+      const payload = {
+        name: voterName,
+        rankings: selected
+      };
+
+      await fetch("https://script.google.com/macros/s/AKfycbwE7JmRYZX6Cg83yaW5Y_4hjEvHTkiSHQIUELAJ9i3WvVio0kqDXJKu1a9jkEcDkEIG/exec", {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+
+      e.target.reset();
+      loadVotesFromSheet();
+    });
+
+    function updateResults(votes) {
+      if (!votes.length) return;
+
+      const latest = votes[votes.length - 1];
+      const resultsDiv = document.getElementById("results");
+      resultsDiv.innerHTML = "<h3>Your Rankings:</h3><ol>" +
+        [1,2,3,4,5].map(num => latest.rankings[num] ? `<li>${latest.rankings[num]}</li>` : "<li>–</li>").join("") +
+        "</ol>";
+
+      const tally = {};
+      votes.forEach(vote => {
+        for (let i = 1; i <= 5; i++) {
+          const title = vote.rankings[i];
+          if (title) {
+            tally[title] = (tally[title] || 0) + (6 - i);
+          }
+        }
+      });
+
+      const sorted = Object.entries(tally).sort((a, b) => b[1] - a[1]);
+      const voteTally = document.getElementById("voteTally");
+      voteTally.innerHTML = `<ol>${sorted.map(([title, pts]) => `<li>${title} — ${pts} pts</li>`).join("")}</ol>`;
+
+      const voterList = document.getElementById("voterList");
+      voterList.innerHTML = votes.map(v => `<div class="vote-entry"><strong>${v.name}</strong>: ` +
+        Object.entries(v.rankings).sort(([a], [b]) => a - b).map(([rank, book]) => `${rank}: ${book}`).join(", ") +
+        `</div>`).join("");
+    }
+
+    window.onload = loadVotesFromSheet;
+  </script>
+</body>
+</html>
